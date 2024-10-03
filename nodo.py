@@ -29,3 +29,15 @@ class Nodo():
     
     def getG(self):
         return self.g
+
+    def __lt__(self, other):
+        return self.f < other.f
+
+    def __le__(self, other):
+        return self.f <= other.f
+    
+    def __gt__(self, other):
+        return self.f > other.f
+    
+    def __ge__(self, other):
+        return self.f >= other.f

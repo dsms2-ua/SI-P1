@@ -1,5 +1,6 @@
 from nodo import Nodo
 from casilla import *
+import heapq
         
 def generarHijo(pos, caso):
     coste = 1
@@ -44,42 +45,66 @@ def esValida(mapi, pos):
 
     return valida
 
-def AEstrella(inicial, final, mapi, camino):
+def calcularCalorias(mapi, pos):
+    cal = 0
+    valor = mapi.getCelda(pos.getFila(), pos.getCol())
+
+    if valor == 0: #Hierba
+        cal = 2
+    if valor == 4: #Agua
+        cal = 4
+    if valor == 6: #Roca
+        cal = 6
+
+    return cal
+
+def AEstrella(inicial, final, mapi, camino, orden):
     listaInterior = []
     listaFrontera = []
     
     nodoInicial = Nodo(inicial, None, 0, 0)
     nodoInicial.setH(0)
     nodoInicial.calculaF()
-    listaFrontera.append(nodoInicial)
+    
+    heapq.heappush(listaFrontera, nodoInicial)
+
+    orden[inicial.getFila()][inicial.getCol()] = 0
+    cont = 1
     
     while len(listaFrontera) != 0:
-        #Ordenamos la lista frontera
-        listaFrontera.sort(key=lambda x: x.f)
-        n = listaFrontera[0]
+        #Extraemos el nodo en la cima del heap
+        n = heapq.heappop(listaFrontera)
         
         if n.casilla == final:
             #Reconstruir camino iterando por padres
             actual = n
             while actual.getCasilla() != inicial:
-                camino[actual.getFila()][actual.getColumna()] == 'c'
+                camino[actual.getCasilla().getFila()][actual.getCasilla().getCol()] = 'c'
                 actual = actual.padre
-            for i in camino:
-                for j in camino[0]:
-                    print(camino[i][j])
+            for i in range(len(camino)):
+                for j in range(len(camino[0])):
+                    print(camino[i][j], end='')
                 print()
-            return n.coste, n.cal
+
+            for i in range(len(orden)):
+                for j in range(len(orden[0])):
+                    print(orden[i][j], end=' ')
+                print()
+            return n.g, n.cal
         
-        listaFrontera.remove(n)
-        listaInterior.append(n)
+        listaInterior.append(n) #Añadimos a la lista de nodos explorados
         
         #Generamos los hijos y comprobamos que no estén en la lista interior
         for i in range(8):
             nuevaPos, coste = generarHijo(n.getCasilla(), i)
+            calorias = calcularCalorias(mapi, nuevaPos)
             
             #Comprobamos que el hijo sea una casilla accesible
-            if bueno(mapi, nuevaPos) and esValida(mapi, nuevaPos):                
+            if bueno(mapi, nuevaPos) and esValida(mapi, nuevaPos):
+                orden[nuevaPos.getFila()][nuevaPos.getCol()] = cont
+                cont += 1                
                 g = n.getG() + coste
+                
                 #Comprobamos que el nodo no esté en la lista interior
                 isIn = False
                 for elem in listaInterior:
@@ -89,11 +114,10 @@ def AEstrella(inicial, final, mapi, camino):
                         break
                 
                 if not isIn:
-                    print("Genero")
-                    m = Nodo(nuevaPos, n, coste, 0)
+                    m = Nodo(nuevaPos, n, coste, calorias)
                     m.setH(0)
                     m.calculaF()
-                    listaFrontera.append(m)
+                    heapq.heappush(listaFrontera, m)
                 else:
                     if g < m.getG():
                         m.padre = n

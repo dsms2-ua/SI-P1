@@ -9,3 +9,8 @@ class Casilla():
     def getCol (self):
         return self.col
         
+    def __eq__(self, other):
+        return self.fila==other.fila and self.col==other.col
+
+    def __hash__(self):
+        return hash((self.fila, self.col))

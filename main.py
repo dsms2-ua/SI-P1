@@ -64,6 +64,15 @@ def inic(mapi):
     
     return cam
 
+def inicUnos(mapi):
+    cam = []
+    for i in range(mapi.alto):
+        cam.append([])
+        for j in range(mapi.ancho):
+            cam[i].append(-1)
+    
+    return cam
+
         
 # función principal
 def main():
@@ -77,7 +86,8 @@ def main():
         file=sys.argv[-1]
          
     mapi=Mapa(file)     
-    camino=inic(mapi)   
+    camino=inic(mapi)
+    orden = inicUnos(mapi)   
     
     anchoVentana=mapi.getAncho()*(TAM+MARGEN)+MARGEN
     altoVentana= MARGEN_INFERIOR+mapi.getAlto()*(TAM+MARGEN)+MARGEN    
@@ -121,7 +131,7 @@ def main():
                         if pulsaBoton(mapi, pos)==1:
                             ###########################                                                 
                             #coste, cal=llamar a A estrella  
-                            coste, cal = AEstrella(origen, destino, mapi, camino)           
+                            coste, cal = AEstrella(origen, destino, mapi, camino, orden)           
                             if coste==-1:
                                 print('Error: No existe un camino válido entre origen y destino')
                         else:
