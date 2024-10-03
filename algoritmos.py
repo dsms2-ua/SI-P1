@@ -58,12 +58,40 @@ def calcularCalorias(mapi, pos):
 
     return cal
 
+def heuristicaManhattan(pos, final,):
+    return abs(pos.getFila() - final.getFila()) + abs(pos.getCol() - final.getCol())
+
+def heuristicaEuclidea(pos, final):
+    return sqrt((pos.getFila() - final.getFila())**2 + (pos.getCol() - final.getCol())**2)
+
+def heuristicaChebychev(pos, final):
+    return max(abs(pos.getFila() - final.getFila()), abs(pos.getCol() - final.getCol()))
+
+def heuristicaOctil(pos, final):
+    dx = abs(pos.getFila() - final.getFila())
+    dy = abs(pos.getCol() - final.getCol())
+    return abs(dx - dy) + 1.5 * min(dx, dy)
+
+def heuristica(pos, final, opt):
+    if opt == 0:
+        return heuristicaManhattan(pos, final)
+    if opt == 1:
+        return heuristicaEuclidea(pos, final)
+    if opt == 2:
+        return heuristicaChebychev(pos, final)
+    if opt == 3:
+        return heuristicaOctil(pos, final)
+
 def AEstrella(inicial, final, mapi, camino, orden):
     listaInterior = []
     listaFrontera = []
+
+    #Modificar el valor en función de la heurística
+    opt = 3
     
     nodoInicial = Nodo(inicial, None, 0, 0)
-    nodoInicial.setH(0)
+    h = heuristica(inicial, final, opt)
+    nodoInicial.setH(h)
     nodoInicial.calculaF()
     
     heapq.heappush(listaFrontera, nodoInicial)
@@ -100,27 +128,38 @@ def AEstrella(inicial, final, mapi, camino, orden):
             calorias = calcularCalorias(mapi, nuevaPos)
             
             #Comprobamos que el hijo sea una casilla accesible
-            if bueno(mapi, nuevaPos) and esValida(mapi, nuevaPos):
-                orden[nuevaPos.getFila()][nuevaPos.getCol()] = cont
-                cont += 1                
+            if bueno(mapi, nuevaPos) and esValida(mapi, nuevaPos):                
                 g = n.getG() + coste
-                
                 #Comprobamos que el nodo no esté en la lista interior
-                isIn = False
+                inInterior = False
                 for elem in listaInterior:
                     if elem.casilla == nuevaPos:
-                        isIn = True
+                        inInterior = True
                         m = elem
                         break
                 
-                if not isIn:
-                    m = Nodo(nuevaPos, n, coste, calorias)
-                    m.setH(0)
-                    m.calculaF()
-                    heapq.heappush(listaFrontera, m)
-                else:
-                    if g < m.getG():
-                        m.padre = n
-                        m.g = g
+                if not inInterior:
+                    orden[nuevaPos.getFila()][nuevaPos.getCol()] = cont
+                    cont += 1
+                    #Comprobamos si esta en la listaFrontera
+                    inFrontera = False
+                    for j in range(len(listaFrontera)):
+                        if listaFrontera[j].casilla == nuevaPos:
+                            posicion = j
+                            inFrontera = True  
+                            break
+
+                    if not inFrontera:
+                        m = Nodo(nuevaPos, n, coste, calorias)
+                        h = heuristica(nuevaPos, final, opt)
+                        m.setH(h)
                         m.calculaF()
+                        heapq.heappush(listaFrontera, m)
+                    
+                    else:
+                        if g < listaFrontera[posicion].getG():
+                            listaFrontera[posicion].padre = n
+                            listaFrontera[posicion].g = g
+                            listaFrontera[posicion].calculaF()
+
     return -1, -1
