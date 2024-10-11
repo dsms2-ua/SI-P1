@@ -5,6 +5,13 @@ from sesion1 import *
 from pygame.locals import *
 from nodo import *
 from algoritmos import *
+import time
+import io
+from fpdf import FPDF
+import sys
+import os
+
+
 
 
 MARGEN=5
@@ -73,6 +80,141 @@ def inicUnos(mapi):
     
     return cam
 
+def devuelveHeuristica(opt):
+    if opt == 0:
+        return "Manhattan"
+    if opt == 1:
+        return "Euclídea"
+    if opt == 2:
+        return "Chebychev"
+    if opt == 3:
+        return "Octil"
+    if opt == 4:
+        return "Ninguna"
+
+def imprimirResumenPDF(mapa, inicio, final, heuristica, camino, estados, coste, calorias, tiempo, estadosInterior):
+    buffer = io.StringIO()
+    sys.stdout = buffer
+
+    #1. Imprimir el mapa
+    print(mapa)
+    
+    #2. Casilla de inicio y final
+    print("Casilla de inicio: {}".format(inicio))
+    print("Casilla de final: {}\n".format(final))
+
+    #3. Heurística utilizada
+    heu = devuelveHeuristica(heuristica)
+    print("La heurística utilizada es: {}\n".format(heu))
+
+    #4. Imprimir la matriz de camino final
+    for i in range(mapa.alto):
+        for j in range(mapa.ancho):
+            print(camino[i][j], end=" ")
+        print("")
+    print("")
+
+    #5. Imprimir la matriz de orden de generación de estados
+    for i in range(mapa.alto):
+        for j in range(mapa.ancho):
+            print(f"{estados[i][j]:>3}", end=" ")
+        print("")
+    print("")
+
+    #6. Coste y calorías finales
+    print("El coste del camino final es: {}".format(coste))
+    print("Las calorías totales del camino son: {}\n".format(calorias))
+
+    #7. Tiempo utilizado
+    print("El tiempo de cómputo del camino es: {}segundos\n".format(tiempo))
+
+    #8. Número de estados de lista interior
+    print("El número de estados en la lista interior es: {}\n".format(estadosInterior))
+
+    sys.stdout = sys.__stdout__
+    contenido = buffer.getvalue()
+
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size = 12)
+
+    for linea in contenido.split("\n"):
+        if linea.strip():
+            pdf.cell(200, 10, txt=linea, ln=True)
+
+    if len(sys.argv)==1: #si no se indica un mapa coge mapa.txt por defecto
+        file='mapa'
+    else:
+        file=sys.argv[-1]
+
+    nombre_sin_extension = os.path.splitext(file)[0]
+
+    nombre = "ejecuciones/" + nombre_sin_extension + "/ejecucion" + heu + ".pdf"
+
+    #Antes de generar el archivo borramos el anterior
+    if os.path.exists(nombre):
+        os.remove(nombre)
+
+    pdf.output(nombre)
+
+#Definimos una función para redirigir la salida a un archivo de texto plano
+def imprimirResumenTXT(mapa, inicio, final, heuristica, camino, estados, coste, calorias, tiempo, estadosInterior):
+    buffer = io.StringIO()
+    sys.stdout = buffer
+
+    #1. Imprimir el mapa
+    print(mapa)
+    
+    #2. Casilla de inicio y final
+    print("Casilla de inicio: {}".format(inicio))
+    print("Casilla de final: {}\n".format(final))
+
+    #3. Heurística utilizada
+    heu = devuelveHeuristica(heuristica)
+    print("La heuristica utilizada es: {}\n".format(heu))
+
+    #4. Imprimir la matriz de camino final
+    for i in range(mapa.alto):
+        for j in range(mapa.ancho):
+            print(camino[i][j], end=" ")
+        print("")
+    print("")
+
+    #5. Imprimir la matriz de orden de generación de estados
+    for i in range(mapa.alto):
+        for j in range(mapa.ancho):
+            print(f"{estados[i][j]:>3}", end=" ")
+        print("")
+    print("")
+
+    #6. Coste y calorías finales
+    print("El coste del camino final es: {}".format(coste))
+    print("Las calorias totales del camino son: {}\n".format(calorias))
+
+    #7. Tiempo utilizado
+    print("El tiempo de computo del camino es: {:.4f}segundos\n".format(tiempo))
+
+    #8. Número de estados de lista interior
+    print("El numero de estados en la lista interior es: {}\n".format(estadosInterior))
+
+    sys.stdout = sys.__stdout__
+    contenido = buffer.getvalue()
+
+    if len(sys.argv)==1: #si no se indica un mapa coge mapa.txt por defecto
+        file='mapa'
+    else:
+        file=sys.argv[-1]
+
+    nombre_sin_extension = os.path.splitext(file)[0]
+
+    nombre = "ejecuciones/" + nombre_sin_extension + "/ejecucion" + heu + ".txt"
+
+    #Antes de generar el archivo borramos el anterior
+    if os.path.exists(nombre):
+        os.remove(nombre)
+
+    with open(nombre, "w") as f:
+        f.write(contenido)
         
 # función principal
 def main():
@@ -131,9 +273,18 @@ def main():
                         if pulsaBoton(mapi, pos)==1:
                             ###########################                                                 
                             #coste, cal=llamar a A estrella  
-                            coste, cal = AEstrella(origen, destino, mapi, camino, orden)           
+                            inicio = time.perf_counter()
+                            coste, cal, heuristica, estadosInterior = AEstrella(origen, destino, mapi, camino, orden)
+                            final = time.perf_counter()
+
+                            tiempo = final - inicio
+                            
+                            
                             if coste==-1:
                                 print('Error: No existe un camino válido entre origen y destino')
+                            else:
+                                imprimirResumenTXT(mapi, origen, destino, heuristica, camino, orden, coste, cal, tiempo, estadosInterior)
+
                         else:
                             ###########################                                                   
                             #coste, cal=llamar a A estrella subepsilon                       

@@ -1,6 +1,7 @@
 from nodo import Nodo
 from casilla import *
 import heapq
+import math
         
 def generarHijo(pos, caso):
     coste = 1
@@ -62,7 +63,7 @@ def heuristicaManhattan(pos, final,):
     return abs(pos.getFila() - final.getFila()) + abs(pos.getCol() - final.getCol())
 
 def heuristicaEuclidea(pos, final):
-    return sqrt((pos.getFila() - final.getFila())**2 + (pos.getCol() - final.getCol())**2)
+    return math.sqrt((pos.getFila() - final.getFila())**2 + (pos.getCol() - final.getCol())**2)
 
 def heuristicaChebychev(pos, final):
     return max(abs(pos.getFila() - final.getFila()), abs(pos.getCol() - final.getCol()))
@@ -81,13 +82,15 @@ def heuristica(pos, final, opt):
         return heuristicaChebychev(pos, final)
     if opt == 3:
         return heuristicaOctil(pos, final)
+    if opt == 4:
+        return 0
 
 def AEstrella(inicial, final, mapi, camino, orden):
     listaInterior = []
     listaFrontera = []
 
     #Modificar el valor en función de la heurística
-    opt = 3
+    opt = 0
     
     nodoInicial = Nodo(inicial, None, 0, 0)
     h = heuristica(inicial, final, opt)
@@ -109,16 +112,8 @@ def AEstrella(inicial, final, mapi, camino, orden):
             while actual.getCasilla() != inicial:
                 camino[actual.getCasilla().getFila()][actual.getCasilla().getCol()] = 'c'
                 actual = actual.padre
-            for i in range(len(camino)):
-                for j in range(len(camino[0])):
-                    print(camino[i][j], end='')
-                print()
 
-            for i in range(len(orden)):
-                for j in range(len(orden[0])):
-                    print(orden[i][j], end=' ')
-                print()
-            return n.g, n.cal
+            return n.g, n.cal, opt, len(listaInterior)
         
         listaInterior.append(n) #Añadimos a la lista de nodos explorados
         
@@ -162,4 +157,4 @@ def AEstrella(inicial, final, mapi, camino, orden):
                             listaFrontera[posicion].g = g
                             listaFrontera[posicion].calculaF()
 
-    return -1, -1
+    return -1, -1, opt
