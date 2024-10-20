@@ -11,7 +11,7 @@ class Mapa():
         for f in range(self.alto):            
             for c in range(self.ancho):               
                 if self.mapa[f][c] == 0:
-                    salida += "  "
+                    salida += ". "
                 if self.mapa[f][c] == 1:
                     salida += "# "                 
                 if self.mapa[f][c] == 3:

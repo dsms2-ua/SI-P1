@@ -54,7 +54,7 @@ def calcularCalorias(mapi, pos):
         cal = 2
     if valor == 4: #Agua
         cal = 4
-    if valor == 6: #Roca
+    if valor == 5: #Roca
         cal = 6
 
     return cal
@@ -90,7 +90,7 @@ def AEstrella(inicial, final, mapi, camino, orden):
     listaFrontera = []
 
     #Modificar el valor en función de la heurística
-    opt = 0
+    opt = 2
     
     nodoInicial = Nodo(inicial, None, 0, 0)
     h = heuristica(inicial, final, opt)

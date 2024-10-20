@@ -16,4 +16,4 @@ class Casilla():
         return hash((self.fila, self.col))
     
     def __str__(self):
-        return f"({self.fila}, {self.col})"
+        return f"({self.col + 1}, {self.fila + 1})"
