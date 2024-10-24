@@ -1,7 +1,3 @@
-#Coordenadas de la casilla del estado y alguna información del padre
-#para una casilla inicial será none pero para las siguientes si que tednremos información
-#coste de venir desde el padre a él
-
 import casilla
 
 class Nodo():
@@ -29,6 +25,9 @@ class Nodo():
     
     def getG(self):
         return self.g
+    
+    def getF(self):
+        return self.f
 
     def __lt__(self, other):
         return self.f < other.f

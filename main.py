@@ -81,15 +81,15 @@ def inicUnos(mapi):
 
 def devuelveHeuristica(opt):
     if opt == 0:
-        return "Manhattan"
-    if opt == 1:
-        return "Euclidea"
-    if opt == 2:
-        return "Chebychev"
-    if opt == 3:
-        return "Octil"
-    if opt == 4:
         return "Ninguna"
+    if opt == 1:
+        return "Manhattan"
+    if opt == 2:
+        return "Euclidea"
+    if opt == 3:
+        return "Chebychev"
+    if opt == 4:
+        return "Octil"
 
 #Definimos una función para redirigir la salida a un archivo de texto plano
 def imprimirResumenTXT(mapa, inicio, final, heuristica, camino, estados, coste, calorias, tiempo, estadosInterior):
@@ -141,7 +141,65 @@ def imprimirResumenTXT(mapa, inicio, final, heuristica, camino, estados, coste, 
 
     nombre_sin_extension = os.path.splitext(file)[0]
 
-    nombre = "ejecuciones/" + nombre_sin_extension + "/ejecucion" + heu + ".txt"
+    nombre = "ejecuciones/Estrella/" + nombre_sin_extension + "/ejecucion" + heu + ".txt"
+
+    #Antes de generar el archivo borramos el anterior
+    if os.path.exists(nombre):
+        os.remove(nombre)
+
+    with open(nombre, "w") as f:
+        f.write(contenido)
+        
+def imprimirResumenTXTEpsilon(mapa, inicio, final, heuristica, camino, estados, coste, calorias, tiempo, estadosInterior, epsilon):
+    buffer = io.StringIO()
+    sys.stdout = buffer
+
+    #1. Imprimir el mapa
+    print(mapa)
+    
+    #2. Casilla de inicio y final
+    print("Casilla de inicio: {}".format(inicio))
+    print("Casilla de final: {}\n".format(final))
+
+    #3. Heurística utilizada
+    heu = devuelveHeuristica(heuristica)
+    print("La heuristica utilizada es: {}\n".format(heu))
+
+    #4. Imprimir la matriz de camino final
+    for i in range(mapa.alto):
+        for j in range(mapa.ancho):
+            print(camino[i][j], end=" ")
+        print("")
+    print("")
+
+    #5. Imprimir la matriz de orden de generación de estados
+    for i in range(mapa.alto):
+        for j in range(mapa.ancho):
+            print(f"{estados[i][j]:>3}", end=" ")
+        print("")
+    print("")
+
+    #6. Coste y calorías finales
+    print("El coste del camino final es: {}".format(coste))
+    print("Las calorias totales del camino son: {}\n".format(calorias))
+
+    #7. Tiempo utilizado
+    print("El tiempo de computo del camino es: {:.5f} segundos\n".format(tiempo))
+
+    #8. Número de estados de lista interior
+    print("El numero de estados en la lista interior es: {}\n".format(estadosInterior))
+
+    sys.stdout = sys.__stdout__
+    contenido = buffer.getvalue()
+
+    if len(sys.argv)==1: #si no se indica un mapa coge mapa.txt por defecto
+        file='mapa'
+    else:
+        file=sys.argv[-1]
+
+    nombre_sin_extension = os.path.splitext(file)[0]
+
+    nombre = "ejecuciones/Epsilon/" + nombre_sin_extension + "/ejecucion" + heu + ".txt"
 
     #Antes de generar el archivo borramos el anterior
     if os.path.exists(nombre):
@@ -157,9 +215,9 @@ def main():
     reloj=pygame.time.Clock()
     
     if len(sys.argv)==1: #si no se indica un mapa coge mapa.txt por defecto
-        file='mapa.txt'
+        file='mapas/mapa.txt'
     else:
-        file=sys.argv[-1]
+        file="mapas/" + sys.argv[-1]
          
     mapi=Mapa(file)     
     camino=inic(mapi)
@@ -171,16 +229,16 @@ def main():
     screen=pygame.display.set_mode(dimension)
     pygame.display.set_caption("Practica 1")
     
-    boton1=pygame.image.load("boton1.png").convert()
+    boton1=pygame.image.load("graficos/boton1.png").convert()
     boton1=pygame.transform.scale(boton1,[50, 30])
     
-    boton2=pygame.image.load("boton2.png").convert()
+    boton2=pygame.image.load("graficos/boton2.png").convert()
     boton2=pygame.transform.scale(boton2,[50, 30])
     
-    personaje=pygame.image.load("rabbit.png").convert()
+    personaje=pygame.image.load("graficos/rabbit.png").convert()
     personaje=pygame.transform.scale(personaje,[TAM, TAM])
     
-    objetivo=pygame.image.load("carrot.png").convert()
+    objetivo=pygame.image.load("graficos/carrot.png").convert()
     objetivo=pygame.transform.scale(objetivo,[TAM, TAM])
     
     coste=-1
@@ -197,20 +255,19 @@ def main():
             if event.type==pygame.MOUSEBUTTONDOWN:
                 pos=pygame.mouse.get_pos()
                 
-                if pulsaBoton(mapi, pos)==1 or pulsaBoton(mapi, pos)==2:
-                    if origen.getFila()==-1 or destino.getFila()==-1:
+                if pulsaBoton(mapi, pos)==1 or pulsaBoton(mapi, pos) == 2:
+                    if origen.getFila()==-1 or destino.getFila() == -1:
                         print('Error: No hay origen o destino')
                     else:
                         camino=inic(mapi)
-                        if pulsaBoton(mapi, pos)==1:
-                            ###########################                                                 
-                            #coste, cal=llamar a A estrella  
+                        if pulsaBoton(mapi, pos) == 1:
+ 
                             inicio = time.perf_counter()
-                            coste, cal, heuristica, estadosInterior = AEstrella(origen, destino, mapi, camino, orden)
+                            heuristica = 2
+                            coste, cal, estadosInterior = AEstrella(origen, destino, mapi, camino, orden, heuristica)
                             final = time.perf_counter()
 
                             tiempo = final - inicio
-                            
                             
                             if coste==-1:
                                 print('Error: No existe un camino válido entre origen y destino')
@@ -218,10 +275,19 @@ def main():
                                 imprimirResumenTXT(mapi, origen, destino, heuristica, camino, orden, coste, cal, tiempo, estadosInterior)
 
                         else:
-                            ###########################                                                   
-                            #coste, cal=llamar a A estrella subepsilon                       
+
+                            inicio = time.perf_counter()
+                            heuristica = 0
+                            epsilon = 0.1
+                            coste, cal, estadosInterior = AEstrellaEpsilon(origen, destino, mapi, camino, orden, heuristica, epsilon)
+                            final = time.perf_counter()
+                            
+                            tiempo = final - inicio
+                                                  
                             if coste==-1:
                                 print('Error: No existe un camino válido entre origen y destino')
+                            else:
+                                imprimirResumenTXTEpsilon(mapi, origen, destino, heuristica, camino, orden, coste, cal, tiempo, estadosInterior, epsilon)
                             
                 elif esMapa(mapi,pos):                    
                     if event.button==1: #botón izquierdo                        
