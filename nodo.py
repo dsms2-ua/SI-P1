@@ -28,6 +28,9 @@ class Nodo():
     
     def getF(self):
         return self.f
+    
+    def getCal(self):
+        return self.cal
 
     def __lt__(self, other):
         return self.f < other.f

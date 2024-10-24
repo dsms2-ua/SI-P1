@@ -79,7 +79,7 @@ def heuristica(pos, final, opt):
     if opt == 1:
         return heuristicaManhattan(pos, final)
     elif opt == 2:
-        return heuristicaEuclidea(pos, final)
+        return heuristicaEuclidea(pos, final) * 1.4
     elif opt == 3:
         return heuristicaChebychev(pos, final)
     elif opt == 4:
@@ -171,7 +171,7 @@ def buscaMinimoCal(listaFocal):
 def AEstrellaEpsilon(inicial, final, mapi, camino, orden, opt, epsilon):
     listaInterior = []
     listaFrontera = []
-    listaFocal = [] #Lista de nodos prometedores con respecto a epsilon
+    listaFocal = [] #Lista de nodos prometedores con respecto al umbral
     
     nodoInicial = Nodo(inicial, None, 0, 0)
     h = heuristica(inicial, final, opt)
@@ -183,32 +183,30 @@ def AEstrellaEpsilon(inicial, final, mapi, camino, orden, opt, epsilon):
     orden[inicial.getFila()][inicial.getCol()] = 0
     cont = 1
     
-    while len(listaFrontera) != 0:
-        #Extraemos el nodo en la cima del heap
-        n = heapq.heappop(listaFrontera)
+    while len(listaFrontera) != 0: 
+        #Llenamos la lista focal
+        minF = listaFrontera[0].getF()
+        umbral = (1 + epsilon) * minF
+        listaFocal = [nodo for nodo in listaFrontera if nodo.getF() <= umbral]
         
+        #Seleccionamos el nodo con menor calorias
+        nodoFocal = min(listaFocal, key = lambda x: x.getCal())
+            
         #Si hemos llegado al final, reconstruimos el camino y devolvemos coste y calorías
-        if n.casilla == final:
+        if nodoFocal.casilla == final:
             #Reconstruir camino iterando por padres
-            actual = n
+            actual = nodoFocal
             while actual.getCasilla() != inicial:
                 camino[actual.getCasilla().getFila()][actual.getCasilla().getCol()] = 'c'
                 actual = actual.padre
 
-            return n.g, n.cal, len(listaInterior)
+            return nodoFocal.g, nodoFocal.cal, len(listaInterior)
         
-        listaInterior.append(n) #Añadimos a la lista de nodos explorados
+        #Borramos el nodo de la listaFrontera
+        listaFrontera.remove(nodoFocal)
+        #Añadimos a la lista de nodos explorados
+        listaInterior.append(nodoFocal) 
         
-        #Llenamos la lista focal
-        minF = n.getF()
-        listaFocal = [nodo for nodo in listaFrontera if nodo.getF() <= (1 + epsilon) * minF]
-        
-        #Seleccionamos el nodo con menor calorias
-        if len(listaFocal) != 0:
-            nodoFocal = buscaMinimoCal(listaFocal)
-        else:
-            nodoFocal = n
-            
         #Generamos los hijos y comprobamos que no estén en la lista interior
         for i in range(8):
             nuevaPos, coste = generarHijo(nodoFocal.getCasilla(), i)
@@ -217,6 +215,7 @@ def AEstrellaEpsilon(inicial, final, mapi, camino, orden, opt, epsilon):
             #Comprobamos que el hijo sea una casilla accesible
             if bueno(mapi, nuevaPos) and esValida(mapi, nuevaPos):                
                 g = nodoFocal.getG() + coste
+                
                 #Comprobamos que el nodo no esté en la lista interior
                 inInterior = False
                 for elem in listaInterior:
